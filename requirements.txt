@@ -1,0 +1,9 @@
+pymupdf>=1.26        # чтение PDF/AI, слои OCG, рендер превью
+pymorphy3            # морфология русского для орфографии
+pymorphy3-dicts-ru
+rapidfuzz            # похожие слова и сверка текстов
+fastapi              # веб-интерфейс
+uvicorn[standard]
+jinja2
+python-multipart
+itsdangerous         # сессии

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% set nav = 'deals' %}
+{% set back = '/deal?path=' ~ quote(folder) ~ ('&run_id=' ~ run['id'] if run else '') %}
+{% block body %}
+
+<div class="page-head">
+  <div>
+    <h1>{{ deal.title }}</h1>
+    <div class="lede">
+      {% if deal.deadline %}дедлайн {{ deal.deadline }} · {% endif %}{{ deal.files|length }} файлов
+      {% if record and record['crm_url'] %}
+        · <a href="{{ record['crm_url'] }}" target="_blank" style="color:var(--note)">сделка в CRM ↗</a>
+      {% endif %}
+    </div>
+  </div>
+  <form method="post" action="/deal/run">
+    <input type="hidden" name="path" value="{{ folder }}">
+    <button class="btn">
+      <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+      {{ 'Проверить заново' if run else 'Проверить' }}
+    </button>
+  </form>
+</div>
+
+<div class="split">
+  <div>
+    {% if run %}
+      <h2>Результат · {{ run['created'][5:16].replace('T', ' ') }}</h2>
+      <div class="card">
+      {% if findings %}
+        {% for f in findings %}
+        <div class="finding s{{ f['severity'] }}">
+          <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start">
+            <h3>{{ f['title'] }}</h3>
+            <span class="b {{ 'stop' if f['severity']==3 else ('warn' if f['severity']==2 else 'note') }}">
+              {{ SEV_NAME[f['severity']] }}</span>
+          </div>
+          {% if f['detail'] %}<p>{{ f['detail'] }}</p>{% endif %}
+          <div class="foot">
+            <span class="mono">{{ f['code'] }}</span>
+            <span class="row" style="gap:6px">
+              {% for v, label in [('ok','Верно'), ('false','Ложное'), ('missed','Мало')] %}
+              <form method="post" action="/finding/verdict" style="display:inline">
+                <input type="hidden" name="finding_id" value="{{ f['id'] }}">
+                <input type="hidden" name="verdict" value="{{ v }}">
+                <input type="hidden" name="back" value="{{ back }}">
+                <button class="chip {{ 'pick-' ~ v if f['verdict'] == v }}" type="submit">{{ label }}</button>
+              </form>
+              {% endfor %}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="blank" style="color:var(--ok)">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <div>Замечаний нет</div>
+        </div>
+      {% endif %}
+      </div>
+    {% else %}
+      <div class="card"><div class="blank">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <div>Сделка ещё не проверялась</div>
+      </div></div>
+    {% endif %}
+
+    {% if previews %}
+    <h2>Как это выглядит</h2>
+    <div class="card">
+      <div class="thumbs">
+        {% for p in previews %}
+        <a href="/preview?path={{ quote(p.path|string) }}&hi=1" target="_blank" title="{{ p.name }} · {{ p.role.value }}">
+          <img src="/preview?path={{ quote(p.path|string) }}" loading="lazy" alt="{{ p.name }}">
+        </a>
+        {% endfor %}
+      </div>
+      <div class="hint">
+        Финалка и векторные файлы — в полном разрешении. У&nbsp;<b>.cdr</b> показан встроенный
+        эскиз Corel (256&nbsp;px) — этого хватает узнать файл, но не проверить его.
+        Для разбора принта нужен экспорт в PDF со слоями.
+      </div>
+    </div>
+    {% endif %}
+
+    <h2>Файлы в папке</h2>
+    <div class="card">
+      <ul class="files">
+      {% for f in files %}
+        <li>
+          <span class="b dim plain" style="min-width:62px;justify-content:center">{{ f.role.value }}</span>
+          <span class="nm">{{ f.name }}
+            {% if f.hints %}<span style="color:var(--ink-3);font-size:12px">
+              {% if f.hints.get('qty') %} · {{ f.hints['qty'] }} шт{% endif %}
+              {% if f.hints.get('sides') %} · {{ f.hints['sides'] }} стор.{% endif %}
+              {% if f.hints.get('deal_no') %} · #{{ f.hints['deal_no'] }}{% endif %}
+            </span>{% endif %}
+          </span>
+          <span class="sz">{{ (f.size / 1048576)|round(1) }} МБ</span>
+          <span class="sz">{{ f.mtime.strftime('%d.%m %H:%M') }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <form method="post" action="/deal/save">
+    <input type="hidden" name="path" value="{{ folder }}">
+    <h2>Учёт</h2>
+    <div class="card pad">
+      <label>Статус</label>
+      <select name="status">
+        {% for s in ['новая', 'в работе', 'на проверке', 'готово'] %}
+        <option value="{{ s }}" {{ 'selected' if record and record['status'] == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Исполнитель</label>
+      <select name="assignee"><option value="">—</option>
+        {% for u in users %}<option value="{{ u['name'] }}" {{ 'selected' if record and record['assignee'] == u['name'] }}>{{ u['name'] }}</option>{% endfor %}
+      </select>
+
+      <label>Проверяющий</label>
+      <select name="reviewer"><option value="">—</option>
+        {% for u in users %}<option value="{{ u['name'] }}" {{ 'selected' if record and record['reviewer'] == u['name'] }}>{{ u['name'] }}</option>{% endfor %}
+      </select>
+
+      <label>Сложность</label>
+      <select name="difficulty"><option value="">—</option>
+        {% for s in ['легко', 'средне', 'сложно', 'повтор'] %}
+        <option value="{{ s }}" {{ 'selected' if record and record['difficulty'] == s }}>{{ s }}</option>{% endfor %}
+      </select>
+
+      <label>Ссылка на сделку в CRM</label>
+      <input type="text" name="crm_url" placeholder="https://medalistore.freedom.bi/…"
+             value="{{ record['crm_url'] if record and record['crm_url'] else '' }}">
+
+      <label>Комментарий</label>
+      <textarea name="comment" style="min-height:66px">{{ record['comment'] if record and record['comment'] else '' }}</textarea>
+
+      <label>Что учесть при проверке этой сделки</label>
+      <textarea name="note" style="min-height:76px"
+                placeholder="например: тут ленты важнее всего">{{ note }}</textarea>
+
+      <button class="btn" style="width:100%;justify-content:center;margin-top:16px">Сохранить</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block body %}
+<div style="max-width:640px;margin:6vh auto">
+
+  <div class="row" style="gap:8px;margin-bottom:22px">
+    <span class="b {{ 'ok' if step >= 1 else 'dim' }}">1 · Папка</span>
+    <span class="b {{ 'ok' if step >= 2 else 'dim' }}">2 · Как пользоваться</span>
+  </div>
+
+{% if step == 1 %}
+  <h1>Здравствуйте, {{ user['name'] }}</h1>
+  <div class="lede" style="margin-bottom:20px">
+    Должность: {{ position_name(user['role']) }}. Настроим за минуту.
+  </div>
+
+  {% if needs_folder %}
+  <form method="post" action="/onboarding/folder" class="card pad">
+    <h3 class="sec">Где лежат ваши заказы?</h3>
+    <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
+      Preflight читает папки прямо с диска — загружать файлы никуда не нужно.
+      Внутри ожидается <span class="mono">&lt;год&gt;/&lt;месяц&gt;/&lt;сделка (дедлайн)&gt;</span>.
+    </p>
+    {% if error %}<div class="b stop" style="margin-bottom:12px">{{ error }}</div>{% endif %}
+    <label>Путь к папке</label>
+    <input type="text" name="root" value="{{ root }}" autofocus>
+    <div class="hint" style="padding:8px 0 0">
+      В Finder: правый клик по папке → «Скопировать путь».
+      В Проводнике: нажмите на адресную строку и скопируйте.
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn">Дальше</button>
+      <a href="/onboarding?step=2" class="btn ghost">Пропустить</a>
+    </div>
+  </form>
+  {% else %}
+  <div class="card pad">
+    <h3 class="sec">Папка не нужна</h3>
+    <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 16px">
+      На вашей должности файлы с диска не читаются — вы работаете с готовыми
+      отчётами, статистикой и учётом сделок.
+    </p>
+    <a href="/onboarding?step=2" class="btn">Дальше</a>
+  </div>
+  {% endif %}
+
+{% else %}
+  <h1>Как этим пользоваться</h1>
+  <div class="lede" style="margin-bottom:20px">Четыре шага, дальше по кругу</div>
+
+  <div class="card" style="margin-bottom:16px">
+    {% for n, t, d in [
+      (1, 'Открываете сделку', 'На вкладке «Сделки» выбираете месяц и папку. Preflight сам разберёт, где финалка, где принт, где рез и ленты.'),
+      (2, 'Жмёте «Проверить»', 'Он читает файлы и выдаёт находки тремя уровнями: стоп — так в производство нельзя, внимание — посмотрите глазами, к сведению — просто заметка.'),
+      (3, 'Оцениваете находки', 'Под каждой три кнопки: «Верно», «Ложное», «Мало». Это главное, что от вас нужно — по оценкам подкручиваются пороги, и сервис перестаёт орать зря.'),
+      (4, 'Ведёте учёт', 'Справа в карточке — статус, исполнитель, проверяющий, сложность и ссылка на сделку в CRM. Это замена таблице.')
+    ] %}
+    <div class="finding s1" style="border-top:{{ '0' if n == 1 else '1px solid var(--line-soft)' }}">
+      <div class="row" style="gap:11px;align-items:flex-start">
+        <span class="b note plain" style="min-width:24px;justify-content:center">{{ n }}</span>
+        <div><h3>{{ t }}</h3><p>{{ d }}</p></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="warnbox" style="margin-bottom:16px">
+    <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div>Preflight <b>советует, а не запрещает</b>. Решение и ответственность остаются на вас —
+      он лишь показывает, куда посмотреть.</div>
+  </div>
+
+  <form method="post" action="/onboarding/done">
+    <button class="btn">Всё понятно, начать</button>
+  </form>
+{% endif %}
+</div>
+{% endblock %}

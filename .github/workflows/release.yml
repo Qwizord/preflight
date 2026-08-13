@@ -1,0 +1,58 @@
+name: Сборка и релиз
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: preflight-windows.zip
+          - os: macos-latest
+            asset: preflight-macos.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Сборка
+        working-directory: packaging
+        run: pyinstaller --noconfirm --clean preflight.spec
+
+      - name: Упаковать (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path packaging/dist/Preflight/* -DestinationPath ${{ matrix.asset }}
+
+      - name: Упаковать (macOS)
+        if: runner.os == 'macOS'
+        run: cd packaging/dist/Preflight && zip -qr ../../../${{ matrix.asset }} .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            preflight-windows.zip
+            preflight-macos.zip
+          generate_release_notes: true

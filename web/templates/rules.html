@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set nav = 'rules' %}
+{% block body %}
+<div class="page-head"><div>
+  <h1>Правила</h1>
+  <div class="lede">Как часто срабатывает каждое правило и что вы о нём сказали</div>
+</div></div>
+<div class="card">
+{% if stats %}
+<table>
+  <thead><tr><th>Правило</th><th style="width:90px">Всего</th><th style="width:90px">Верно</th>
+    <th style="width:90px">Ложно</th><th style="width:200px">Точность</th></tr></thead>
+  <tbody>
+  {% for s in stats %}
+  {% set judged = (s['ok'] or 0) + (s['wrong'] or 0) %}
+  <tr>
+    <td class="mono" style="font-size:12.5px">{{ s['code'] }}</td>
+    <td class="num">{{ s['total'] }}</td>
+    <td class="num" style="color:var(--ok)">{{ s['ok'] or 0 }}</td>
+    <td class="num" style="color:var(--stop)">{{ s['wrong'] or 0 }}</td>
+    <td>
+      {% if judged %}
+        {% set acc = (s['ok'] or 0) * 100 // judged %}
+        <div class="meter"><i style="width:{{ acc }}%;background:var(--ok)"></i><i style="width:{{ 100-acc }}%;background:var(--stop)"></i></div>
+        <div style="font-size:11.5px;color:var(--ink-3);margin-top:5px">{{ acc }}% · не оценено {{ s['pending'] or 0 }}</div>
+      {% else %}<span style="font-size:12.5px;color:var(--ink-3)">не оценено</span>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<div class="blank">Пока нечего показывать — запустите первую проверку</div>{% endif %}
+</div>
+{% endblock %}

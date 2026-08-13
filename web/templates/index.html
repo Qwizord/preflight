@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set nav = 'deals' %}
+{% block body %}
+
+<div class="page-head">
+  <div>
+    <h1>Сделки</h1>
+    <div class="lede">{{ root }}</div>
+  </div>
+  <a href="/settings" class="btn ghost">
+    <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Сменить папку
+  </a>
+</div>
+
+<form method="get" class="row" style="margin-bottom:16px">
+  <select name="month" onchange="this.form.submit()" style="width:auto;min-width:180px">
+    {% for m in months %}<option value="{{ m }}" {{ 'selected' if m == month }}>{{ m }}</option>{% endfor %}
+  </select>
+  <input type="text" name="q" value="{{ q }}" placeholder="Поиск по названию" style="flex:1;min-width:200px">
+  <button class="btn ghost" type="submit">Найти</button>
+</form>
+
+<div class="card">
+{% if folders %}
+<table>
+  <thead><tr>
+    <th>Сделка</th><th style="width:110px">Дедлайн</th>
+    <th style="width:130px">Статус</th><th style="width:230px">Последняя проверка</th>
+  </tr></thead>
+  <tbody>
+  {% for f in folders %}
+  <tr class="hit" onclick="location='/deal?path={{ quote(f.path) }}'">
+    <td>
+      <div style="font-weight:520">{{ f.title }}</div>
+      {% if f.deal and f.deal.assignee %}
+        <div style="font-size:12px;color:var(--ink-3);margin-top:1px">{{ f.deal.assignee }}</div>
+      {% endif %}
+    </td>
+    <td class="num" style="color:var(--ink-2);white-space:nowrap">{{ f.deadline or '—' }}</td>
+    <td>
+      {% set st = f.deal.status if f.deal else 'новая' %}
+      <span class="b {{ 'ok' if st == 'готово' else 'dim' }}">{{ st }}</span>
+    </td>
+    <td>
+      {% if f.run %}
+        {% if f.run.n_stop %}<span class="b stop">{{ f.run.n_stop }} стоп</span>
+        {% elif f.run.n_warn %}<span class="b warn">{{ f.run.n_warn }} внимание</span>
+        {% elif f.run.n_note %}<span class="b note">{{ f.run.n_note }} к сведению</span>
+        {% else %}<span class="b ok">чисто</span>{% endif %}
+        <span style="font-size:12px;color:var(--ink-3);margin-left:7px">
+          {{ f.run.created[5:16].replace('T', ' ') }}</span>
+      {% else %}
+        <span style="font-size:13px;color:var(--ink-3)">не проверялась</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="blank">
+  <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+  <div>Папок не найдено</div>
+  <div style="font-size:12.5px;margin-top:6px">
+    Ожидается <span class="mono">{{ root }}/&lt;год&gt;/&lt;месяц&gt;/&lt;сделка&gt;</span>
+  </div>
+  <a href="/settings" class="btn ghost" style="margin-top:16px">Указать другую папку</a>
+</div>
+{% endif %}
+</div>
+{% endblock %}

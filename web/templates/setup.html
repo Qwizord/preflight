@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block body %}
+<div style="max-width:380px;margin:11vh auto">
+  <div style="display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;letter-spacing:-.5px">
+    <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(145deg,#f0463c,#c62f26);display:grid;place-items:center">
+      <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>pre<span style="color:var(--ink-3)">flight</span>
+  </div>
+  <div class="lede" style="margin:8px 0 20px">Первый запуск — создайте учётную запись</div>
+  <form method="post" action="/setup" class="card pad">
+    <label>Имя</label><input type="text" name="name" placeholder="Антон" autofocus required>
+    <label>Логин</label><input type="text" name="login" required>
+    <label>Пароль</label><input type="password" name="password" required>
+    <label>Должность</label>
+    <select name="role">
+      {% for key, title in POSITIONS.items() %}
+      <option value="{{ key }}" {{ 'selected' if key == 'tech' }}>{{ title }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" style="width:100%;justify-content:center;margin-top:18px">Создать</button>
+  </form>
+</div>
+{% endblock %}

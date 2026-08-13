@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set nav = '' %}
+{% block body %}
+<div class="page-head"><div>
+  <h1>Настройки</h1>
+  <div class="lede">Где лежат папки сделок и кто пользуется сервисом</div>
+</div></div>
+
+<div class="split">
+<div>
+  <h2>Папка со сделками</h2>
+  <form method="post" action="/settings" class="card pad">
+    {% if saved %}<div class="b ok" style="margin-bottom:12px">Сохранено</div>{% endif %}
+    {% if error %}<div class="b stop" style="margin-bottom:12px">{{ error }}</div>{% endif %}
+    <label>Путь</label>
+    <input type="text" name="root" value="{{ root }}" placeholder="/Users/user/Desktop/Medali Store">
+    <div class="hint" style="padding:8px 0 0">
+      Внутри ожидается <span class="mono">&lt;год&gt;/&lt;месяц&gt;/&lt;сделка (дедлайн)&gt;</span>.
+      Путь можно вставить из Finder: правый клик по папке → «Скопировать путь».
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn">Сохранить</button>
+      <button class="btn ghost" name="root" value="" type="submit">Вернуть по умолчанию</button>
+    </div>
+  </form>
+
+  {% if found is not none %}
+  <div class="card pad" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between">
+      <span style="color:var(--ink-2);font-size:13.5px">Найдено папок сделок</span>
+      <span style="font-size:20px;font-weight:680;color:{{ 'var(--ok)' if found else 'var(--stop)' }}">{{ found }}</span>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div>
+  <h2>Кто пользуется</h2>
+  <div class="card">
+    <ul class="files">
+      {% for u in people %}
+      <li><span class="avatar">{% if u['avatar'] %}<img src="/avatar/{{ u['id'] }}" alt="">{% else %}{{ u['name'][:1]|upper }}{% endif %}</span>
+        <span class="nm">{{ u['name'] }}
+          <span style="color:var(--ink-3);font-size:12px"> · {{ u['login'] }}</span></span>
+        <span class="b dim plain">{{ position_name(u['role']) }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <h2>Добавить</h2>
+  <form method="post" action="/settings/user" class="card pad">
+    <label>Имя</label><input type="text" name="name" required>
+    <label>Логин</label><input type="text" name="login" required>
+    <label>Пароль</label><input type="password" name="password" required>
+    <label>Должность</label>
+    <select name="role">
+      {% for key, title in POSITIONS.items() %}
+      <option value="{{ key }}" {{ 'selected' if key == 'tech' }}>{{ title }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn ghost" style="width:100%;justify-content:center;margin-top:14px">Создать</button>
+  </form>
+</div>
+</div>
+{% endblock %}

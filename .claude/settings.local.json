@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "WebSearch",
+      "Read(//Users/user/Desktop/**)",
+      "Read(//Users/user/Desktop/Medali Store/2026/Июль/BETBOOM ХОККЕЙНЫЙ ТУРНИР \\\\\\(24.07.26\\\\\\)/**)",
+      "Read(//private/tmp/**)",
+      "Bash(python3 -m venv /tmp/pfenv)",
+      "Bash(/tmp/pfenv/bin/pip install *)",
+      "Bash(/tmp/pfenv/bin/python -c \"import fitz; print\\('PyMuPDF', fitz.__doc__\\)\")",
+      "Bash(qpdf --json --json-key=pages \"Принт_BETBOOM ХОККЕЙНЫЙ ТУРНИР.pdf\")",
+      "Bash(qpdf --qdf --object-streams=disable \"Принт_BETBOOM ХОККЕЙНЫЙ ТУРНИР.pdf\" /tmp/print_qdf.pdf)",
+      "Bash(/tmp/pfenv/bin/python -)",
+      "Bash(/tmp/pfenv/bin/python /tmp/t1.py)",
+      "Bash(cat)",
+      "Bash(/tmp/pfenv/bin/python /tmp/t2.py)"
+    ]
+  }
+}

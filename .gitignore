@@ -1,0 +1,17 @@
+# окружение
+.venv/
+__pycache__/
+*.pyc
+
+# локальные данные — у каждого свои, в репозиторий не идут
+preflight.db
+corpus.tsv
+
+# сборка
+packaging/build/
+packaging/dist/
+*.spec.bak
+preflight-*.zip
+
+# система
+.DS_Store

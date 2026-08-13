@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set nav = 'notes' %}
+{% block body %}
+<div class="page-head"><div>
+  <h1>Общие инструкции</h1>
+  <div class="lede">Учитываются при каждой проверке и видны всем. На что не обращать внимания, где смотреть особенно внимательно.</div>
+</div></div>
+
+{% if saved %}<div class="b ok" style="margin-bottom:14px">Сохранено</div>{% endif %}
+{% if error %}<div class="b stop" style="margin-bottom:14px">Не сохранено — не была отмечена галочка</div>{% endif %}
+
+<form method="post" action="/notes" class="card pad" id="nf">
+  <div class="warnbox" style="margin-bottom:16px">
+    <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div>Это <b>общий</b> текст для всей команды. Меняется у всех сразу и влияет
+      на каждую проверку. Правьте, только если уверены.</div>
+  </div>
+
+  <label style="display:flex;gap:9px;align-items:center;text-transform:none;
+                letter-spacing:0;font-size:14px;margin:0 0 14px">
+    <input type="checkbox" name="confirm" value="yes" id="ck" style="width:auto" onchange="lock()">
+    Начать редактирование
+  </label>
+
+  <textarea name="body" id="ta" disabled style="min-height:280px"
+    placeholder="Например:&#10;— на несимметричность реза не ругайся, так бывает штатно&#10;— ленты проверяй особенно внимательно&#10;— «нержа», «падел», «спиннер» — наши слова, это не опечатки">{{ body }}</textarea>
+  <button class="btn" id="sb" disabled style="margin-top:14px">Сохранить для всех</button>
+</form>
+
+<script>
+function lock(){
+  var on = document.getElementById('ck').checked;
+  document.getElementById('ta').disabled = !on;
+  document.getElementById('sb').disabled = !on;
+  if (on) document.getElementById('ta').focus();
+}
+</script>
+{% endblock %}

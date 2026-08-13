@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set nav = 'runs' %}
+{% block body %}
+<div class="page-head"><div>
+  <h1>Проверки</h1>
+  <div class="lede">История прогонов — видна всем</div>
+</div></div>
+<div class="card">
+{% if runs %}
+<table>
+  <thead><tr><th style="width:130px">Когда</th><th>Сделка</th>
+    <th style="width:130px">Кто</th><th style="width:220px">Результат</th></tr></thead>
+  <tbody>
+  {% for r in runs %}
+  <tr class="hit" onclick="location='/deal?path={{ quote(r['folder']) }}&run_id={{ r['id'] }}'">
+    <td class="num" style="color:var(--ink-3);white-space:nowrap">{{ r['created'][5:16].replace('T',' ') }}</td>
+    <td style="font-weight:520">{{ r['title'] }}</td>
+    <td style="color:var(--ink-2)">{{ r['user_name'] or '—' }}</td>
+    <td>
+      {% if r['n_stop'] %}<span class="b stop">{{ r['n_stop'] }} стоп</span> {% endif %}
+      {% if r['n_warn'] %}<span class="b warn">{{ r['n_warn'] }} внимание</span> {% endif %}
+      {% if r['n_note'] %}<span class="b note">{{ r['n_note'] }} к сведению</span> {% endif %}
+      {% if not r['n_stop'] and not r['n_warn'] and not r['n_note'] %}<span class="b ok">чисто</span>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<div class="blank">Проверок пока не было</div>{% endif %}
+</div>
+{% endblock %}

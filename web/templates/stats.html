@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% set nav = 'stats' %}
+{% block body %}
+<div class="page-head"><div>
+  <h1>Статистика</h1>
+  <div class="lede">Что происходит с проверками и насколько им можно верить</div>
+</div></div>
+
+{% set t = s.total %}
+<div class="tiles">
+  <div class="tile"><div class="k">Проверок</div><div class="v">{{ t['n'] or 0 }}</div>
+    <div class="s">{{ t['deals'] or 0 }} сделок</div></div>
+  <div class="tile"><div class="k">Чистых</div>
+    <div class="v" style="color:var(--ok)">{{ t['clean'] or 0 }}</div>
+    <div class="s">{{ ((t['clean'] or 0) * 100 // (t['n'] or 1)) }}% от всех</div></div>
+  <div class="tile"><div class="k">Стоп</div>
+    <div class="v" style="color:var(--stop)">{{ t['st'] or 0 }}</div>
+    <div class="s">нельзя в производство</div></div>
+  <div class="tile"><div class="k">Внимание</div>
+    <div class="v" style="color:var(--warn)">{{ t['wa'] or 0 }}</div>
+    <div class="s">проверить глазами</div></div>
+  <div class="tile"><div class="k">К сведению</div>
+    <div class="v" style="color:var(--note)">{{ t['no'] or 0 }}</div></div>
+</div>
+
+{% set v = s.verdicts %}
+{% set judged = (v['ok'] or 0) + (v['wrong'] or 0) %}
+<h2>Насколько Preflight прав</h2>
+<div class="card pad">
+  {% if judged %}
+  <div class="row" style="justify-content:space-between;margin-bottom:10px">
+    <span style="font-size:22px;font-weight:680;letter-spacing:-.6px">
+      {{ (v['ok'] or 0) * 100 // judged }}%<span style="font-size:13px;color:var(--ink-3);font-weight:400"> попаданий</span></span>
+    <span style="font-size:12.5px;color:var(--ink-3)">
+      оценено {{ judged }} из {{ judged + (v['pending'] or 0) }}</span>
+  </div>
+  <div class="meter">
+    <i style="width:{{ (v['ok'] or 0) * 100 // judged }}%;background:var(--ok)"></i>
+    <i style="width:{{ (v['wrong'] or 0) * 100 // judged }}%;background:var(--stop)"></i>
+  </div>
+  <div class="row" style="gap:18px;margin-top:12px;font-size:12.5px;color:var(--ink-3)">
+    <span><span class="b ok">верно {{ v['ok'] or 0 }}</span></span>
+    <span><span class="b stop">ложно {{ v['wrong'] or 0 }}</span></span>
+    <span><span class="b warn">мало {{ v['missed'] or 0 }}</span></span>
+    <span><span class="b dim">не оценено {{ v['pending'] or 0 }}</span></span>
+  </div>
+  {% else %}
+  <div class="blank" style="padding:22px 0">
+    Ни одна находка ещё не оценена.<br>
+    <span style="font-size:12.5px">Жмите «Верно» или «Ложное» под находками — отсюда берётся точность.</span>
+  </div>
+  {% endif %}
+</div>
+
+<h2>По людям</h2>
+<div class="card">
+  {% if s.by_user %}
+  <table>
+    <thead><tr><th>Кто</th><th style="width:110px">Проверок</th><th style="width:110px">Чистых</th>
+      <th style="width:100px">Стоп</th><th style="width:110px">Внимание</th></tr></thead>
+    <tbody>
+    {% for u in s.by_user %}
+    <tr>
+      <td style="font-weight:520">{{ u['name'] or '—' }}</td>
+      <td class="num">{{ u['n'] }}</td>
+      <td class="num" style="color:var(--ok)">{{ u['clean'] or 0 }}</td>
+      <td class="num" style="color:var(--stop)">{{ u['st'] or 0 }}</td>
+      <td class="num" style="color:var(--warn)">{{ u['wa'] or 0 }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="blank">Пока пусто</div>{% endif %}
+</div>
+
+<h2>По дням</h2>
+<div class="card">
+  {% if s.by_day %}
+  <table>
+    <thead><tr><th>Дата</th><th style="width:110px">Проверок</th>
+      <th style="width:100px">Стоп</th><th style="width:110px">Внимание</th></tr></thead>
+    <tbody>
+    {% for d in s.by_day %}
+    <tr><td class="num">{{ d['d'][5:] }}</td><td class="num">{{ d['n'] }}</td>
+      <td class="num" style="color:var(--stop)">{{ d['st'] or 0 }}</td>
+      <td class="num" style="color:var(--warn)">{{ d['wa'] or 0 }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="blank">Пока пусто</div>{% endif %}
+</div>
+
+<h2>Что срабатывает чаще всего</h2>
+<div class="card">
+  {% if s.top %}
+  <table>
+    <thead><tr><th>Правило</th><th style="width:110px">Срабатываний</th>
+      <th style="width:100px">Верно</th><th style="width:100px">Ложно</th></tr></thead>
+    <tbody>
+    {% for r in s.top %}
+    <tr><td class="mono" style="font-size:12.5px">{{ r['code'] }}</td>
+      <td class="num">{{ r['n'] }}</td>
+      <td class="num" style="color:var(--ok)">{{ r['ok'] or 0 }}</td>
+      <td class="num" style="color:var(--stop)">{{ r['wrong'] or 0 }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="blank">Пока пусто</div>{% endif %}
+</div>
+{% endblock %}
