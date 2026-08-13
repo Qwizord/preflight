@@ -18,14 +18,13 @@
     <h3 class="sec">Где лежат ваши заказы?</h3>
     <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
       Preflight читает папки прямо с диска — загружать файлы никуда не нужно.
-      Внутри ожидается <span class="mono">&lt;год&gt;/&lt;месяц&gt;/&lt;сделка (дедлайн)&gt;</span>.
+      Внутри может быть любая раскладка — Preflight сам найдёт папки с макетами.
     </p>
     {% if error %}<div class="b stop" style="margin-bottom:12px">{{ error }}</div>{% endif %}
     <label>Путь к папке</label>
     <input type="text" name="root" value="{{ root }}" autofocus>
     <div class="hint" style="padding:8px 0 0">
-      В Finder: правый клик по папке → «Скопировать путь».
-      В Проводнике: нажмите на адресную строку и скопируйте.
+      Windows: скопируйте путь из адресной строки проводника (например <span class="mono">E:\ВИКА МАКЕТЫ</span>).<br>macOS: правый клик по папке → «Скопировать путь».
     </div>
     <div class="row" style="margin-top:16px">
       <button class="btn">Дальше</button>

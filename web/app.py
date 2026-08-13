@@ -21,7 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from preflight import pricing, store                           # noqa: E402
+from preflight import discover, pricing, store                 # noqa: E402
 from preflight.cdr import read_cdr                              # noqa: E402
 from preflight.checks import Severity, analyze                  # noqa: E402
 from preflight.deal import Role, load_deal, parse_folder_name                      # noqa: E402
@@ -53,37 +53,9 @@ def require(request: Request):
     return u
 
 
-MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-          "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
-
-
-def _month_key(name: str) -> int:
-    """Русские месяцы по алфавиту дают Август→Апрель→Декабрь, нужен календарь."""
-    low = name.strip().lower()
-    for i, m in enumerate(MONTHS):
-        if low.startswith(m.lower()[:4]):
-            return i
-    return 99
-
-
 def scan_root() -> list[dict]:
-    """Все папки сделок под корнем: <корень>/<год>/<месяц>/<сделка>."""
-    root = store.root_dir()
-    out: list[dict] = []
-    if not root.exists():
-        return out
-    years = sorted((p for p in root.iterdir() if p.is_dir()),
-                   key=lambda p: p.name, reverse=True)
-    for year in years:
-        months = sorted((p for p in year.iterdir() if p.is_dir()),
-                        key=lambda p: _month_key(p.name), reverse=True)
-        for month in months:
-            for folder in sorted(p for p in month.iterdir() if p.is_dir()):
-                title, deadline = parse_folder_name(folder.name)
-                out.append({"path": str(folder), "name": folder.name,
-                            "title": title, "deadline": deadline,
-                            "month": month.name, "year": year.name})
-    return out
+    """Папки со сделками под корнем — на любой глубине и при любой раскладке."""
+    return discover.scan(store.root_dir())
 
 
 def analysis_to_dict(a) -> dict:
@@ -148,16 +120,20 @@ def logout(request: Request):
 def index(request: Request, month: str | None = None, q: str | None = None):
     u = require(request)
     folders = scan_root()
-    months = sorted({(f["year"], f["month"]) for f in folders},
-                    key=lambda ym: (ym[0], _month_key(ym[1])), reverse=True)
-    months = [f"{y} · {m}" for y, m in months]
-    if month:
-        folders = [f for f in folders if f"{f['year']} · {f['month']}" == month]
+    seen: dict[str, tuple[int, int]] = {}
+    for f in folders:
+        seen.setdefault(f["period"], (f["year"], f["month"]))
+    months = [p for p, _ in sorted(seen.items(), key=lambda kv: kv[1], reverse=True)]
+
+    if q:
+        ql = q.lower()
+        folders = [f for f in folders
+                   if ql in f["name"].lower() or ql in f["where"].lower()]
+    elif month:
+        folders = [f for f in folders if f["period"] == month]
     elif months:
         month = months[0]
-        folders = [f for f in folders if f"{f['year']} · {f['month']}" == month]
-    if q:
-        folders = [f for f in folders if q.lower() in f["name"].lower()]
+        folders = [f for f in folders if f["period"] == month]
 
     for f in folders:
         run = store.last_run_for(f["path"])

@@ -33,9 +33,9 @@
   <tr class="hit" onclick="location='/deal?path={{ quote(f.path) }}'">
     <td>
       <div style="font-weight:520">{{ f.title }}</div>
-      {% if f.deal and f.deal.assignee %}
-        <div style="font-size:12px;color:var(--ink-3);margin-top:1px">{{ f.deal.assignee }}</div>
-      {% endif %}
+      <div style="font-size:12px;color:var(--ink-3);margin-top:1px">
+        {%- if f.deal and f.deal.assignee %}{{ f.deal.assignee }}{% if f.where %} · {% endif %}{% endif -%}
+        {{ f.where }}</div>
     </td>
     <td class="num" style="color:var(--ink-2);white-space:nowrap">{{ f.deadline or '—' }}</td>
     <td>
@@ -61,9 +61,11 @@
 {% else %}
 <div class="blank">
   <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-  <div>Папок не найдено</div>
-  <div style="font-size:12.5px;margin-top:6px">
-    Ожидается <span class="mono">{{ root }}/&lt;год&gt;/&lt;месяц&gt;/&lt;сделка&gt;</span>
+  <div>Папок со сделками не найдено</div>
+  <div style="font-size:12.5px;margin-top:6px;max-width:460px;margin-left:auto;margin-right:auto">
+    Preflight ищет папки, внутри которых лежат макеты — .cdr, .ai, .pdf, .jpg.
+    Раскладка любая, вложенность до шести уровней. Проверьте, что путь указан верно
+    и внутри действительно есть заказы.
   </div>
   <a href="/settings" class="btn ghost" style="margin-top:16px">Указать другую папку</a>
 </div>
