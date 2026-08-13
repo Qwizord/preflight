@@ -4,11 +4,12 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 datas = [("../web/templates", "web/templates")]
 datas += collect_data_files("pymorphy3_dicts_ru")
+datas += collect_data_files("certifi")
 
 hidden = collect_submodules("uvicorn") + collect_submodules("pymorphy3") + [
     "web.app", "preflight.checks", "preflight.cdr", "preflight.vector",
     "preflight.deal", "preflight.spec", "preflight.store", "preflight.textcheck",
-    "preflight.updater", "preflight.version",
+    "preflight.updater", "preflight.version", "certifi",
 ]
 
 a = Analysis(["../run_web.py"], pathex=[".."], datas=datas, hiddenimports=hidden,

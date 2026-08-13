@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import ssl
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -26,6 +27,28 @@ from .version import RELEASES_API, __version__, is_newer
 
 TIMEOUT = 15
 ASSET_FOR = {"win32": "preflight-windows.zip", "darwin": "preflight-macos.zip"}
+
+# Последняя причина, по которой обновление не состоялось — чтобы не гадать молча.
+last_error: str | None = None
+
+
+def _ssl_ctx() -> ssl.SSLContext:
+    """В собранном приложении системных корневых сертификатов нет.
+
+    PyInstaller кладёт libssl, но не хранилище доверенных центров, и любой
+    HTTPS-запрос падает на проверке сертификата. Берём набор из certifi.
+    """
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
+def _open(url: str, timeout: int):
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json",
+                                               "User-Agent": "preflight-updater"})
+    return urllib.request.urlopen(req, timeout=timeout, context=_ssl_ctx())
 
 
 def is_frozen() -> bool:
@@ -42,14 +65,14 @@ def app_dir() -> Path:
 
 def check() -> dict | None:
     """Возвращает сведения о новой версии или None."""
+    global last_error
+    last_error = None
     try:
-        req = urllib.request.Request(
-            RELEASES_API, headers={"Accept": "application/vnd.github+json",
-                                   "User-Agent": "preflight-updater"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        with _open(RELEASES_API, TIMEOUT) as r:
             data = json.load(r)
-    except Exception:
-        return None                      # нет сети — работаем на текущей версии
+    except Exception as e:
+        last_error = f"{type(e).__name__}: {e}"
+        return None                      # нет сети или сертификатов
 
     tag = str(data.get("tag_name") or "")
     if not tag or not is_newer(tag, __version__):
@@ -69,8 +92,7 @@ def check() -> dict | None:
 
 def download(url: str, on_progress=None) -> Path:
     dest = Path(tempfile.mkdtemp(prefix="preflight-upd-")) / "package.zip"
-    req = urllib.request.Request(url, headers={"User-Agent": "preflight-updater"})
-    with urllib.request.urlopen(req, timeout=120) as r, open(dest, "wb") as f:
+    with _open(url, 120) as r, open(dest, "wb") as f:
         total = int(r.headers.get("Content-Length") or 0)
         done = 0
         while chunk := r.read(256 * 1024):
@@ -128,6 +150,8 @@ def run_forced_update(log=print) -> None:
 
     info = check()
     if not info:
+        if last_error:
+            log(f"  проверка обновлений не удалась — {last_error}")
         return
 
     log(f"  Обновление {__version__} → {info['version']}. Это обязательно.")
