@@ -10,11 +10,33 @@ import json
 import os
 import secrets
 import sqlite3
+import sys
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent / "preflight.db"
+def _data_dir() -> Path:
+    """Куда класть данные пользователя.
+
+    В собранном приложении — в профиль пользователя, а НЕ рядом с программой:
+    обновление подменяет папку приложения целиком, и база из неё была бы стёрта.
+    При запуске из исходников остаётся в проекте — удобнее для разработки.
+    """
+    if getattr(sys, "frozen", False):
+        if sys.platform == "win32":
+            base = Path(os.environ.get("APPDATA") or Path.home() / "AppData/Roaming")
+        elif sys.platform == "darwin":
+            base = Path.home() / "Library" / "Application Support"
+        else:
+            base = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")
+        d = base / "Preflight"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+    return Path(__file__).resolve().parent.parent
+
+
+DATA_DIR = _data_dir()
+DB_PATH = DATA_DIR / "preflight.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (

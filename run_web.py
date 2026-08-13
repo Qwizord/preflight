@@ -33,7 +33,7 @@ def main() -> None:
     root = store.root_dir()
     print(f"  Preflight {__version__}")
     print(f"  папки сделок : {root}" + ("" if root.exists() else "   ← не найдено!"))
-    print(f"  база         : {store.db_path()}")
+    print(f"  данные       : {store.DATA_DIR}")
     print(f"  адрес        : http://{HOST}:{PORT}\n")
 
     if HOST in {"127.0.0.1", "localhost"}:
